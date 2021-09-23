@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": ["./node_modules/@types", "./src"],
+    "lib": ["ES2020", "dom"],
+    "jsx": "react",
+    "allowJs": true
+  },
+  "include": ["src"]
+}

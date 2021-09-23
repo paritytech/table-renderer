@@ -11,6 +11,7 @@
     "fix": "npm run fix:eslint && npm run fix:prettier"
   },
   "name": "table-renderer",
+  "description": "table-renderer",
   "version": "0.0.0",
   "author": "Parity <admin@parity.io> (https://parity.io)",
   "license": "Apache-2.0",
@@ -20,7 +21,6 @@
       "url": "http://opensource.org/licenses/Apache-2.0"
     }
   ],
-  "description": "table-renderer",
   "devDependencies": {
     "@types/file-saver": "^2.0.3",
     "@types/react": "^17.0.24",

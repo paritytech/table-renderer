@@ -45,6 +45,10 @@ export interface GetColumnChild<T> {
   (row: T, column: TableColumn<T>): React.ReactNode
 }
 
+export type ExportResponse = string
+
+export type ErrorResponse = { error: string }
+
 export type TableResponse<T extends Record<string, any>> = Omit<
   TableRequest,
   "page"

@@ -132,13 +132,23 @@ const defaultGetColumnChild = function <T>(row: T, { name }: TableColumn<T>) {
 
 const TableRenderer = function <T>({
   tableInitializeMessage,
-  fetchEndpoint,
+  api: {
+    fetchEndpoint,
+    exportEncoding,
+    exportExtension,
+    exportRequestAcceptHeader,
+  },
   getColumnChild,
   token,
   classNames,
 }: {
+  api: {
+    fetchEndpoint: string
+    exportEncoding: string
+    exportExtension: string
+    exportRequestAcceptHeader: string
+  }
   tableInitializeMessage?: string
-  fetchEndpoint: string
   getColumnChild: (
     row: T,
     column: TableColumn<T>,
@@ -231,7 +241,9 @@ const TableRenderer = function <T>({
             headers: {
               "x-auth": tokenInput.current.value,
               "content-type": "application/json",
-              accept: isExportRequest ? "application/csv" : "application/json",
+              accept: isExportRequest
+                ? exportRequestAcceptHeader
+                : "application/json",
             },
             body: JSON.stringify({
               ...request,
@@ -243,11 +255,13 @@ const TableRenderer = function <T>({
           if (response.ok) {
             if (isExportRequest) {
               const blob = new Blob(responseText.split("\n"), {
-                type: "text/csv;charset=utf-8",
+                type: exportEncoding,
               })
               saveAs(
                 blob,
-                `${new Date().toISOString().replace(/\./g, "_")}.csv`,
+                `${new Date().toISOString().replace(/\./g, "_")}${
+                  exportExtension ? `.${exportExtension}` : ""
+                }`,
               )
               setStateAndUpdateURL({
                 ...state,

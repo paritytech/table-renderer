@@ -14,7 +14,7 @@ export const getStringValuesDelimited = function (
     })
 }
 
-export const getInitialTableState = function (): TableState<unknown> {
+export const getInitialTableState = function (): TableState<{}> {
   return {
     pageSize: 10,
     page: 1,

@@ -36,19 +36,26 @@ export type TableRequest = {
   } | null
 }
 
-export type TableColumn = {
-  name: string
+export type TableColumn<T extends Record<string, any>> = {
+  name: keyof T
   isSortable: boolean
 }
 
-export type TableResponse<T> = Omit<TableRequest, "page"> & {
-  page: number
-  pageCount: number
-  data: T
-  columns: TableColumn[]
+export interface GetColumnChild<T> {
+  (row: T, column: TableColumn<T>): React.ReactNode
 }
 
-export type TableState<T> = TableResponse<T> & {
+export type TableResponse<T extends Record<string, any>> = Omit<
+  TableRequest,
+  "page"
+> & {
+  page: number
+  pageCount: number
+  data: T[]
+  columns: TableColumn<T>[]
+}
+
+export type TableState<T extends Record<string, any>> = TableResponse<T> & {
   isLoading: boolean
   error?: string
   isInitialized: boolean

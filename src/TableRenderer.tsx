@@ -64,7 +64,7 @@ const Table = styled.table`
   }
 `
 
-const DataSection = styled.div`
+const Section = styled.section`
   margin: 1rem 0;
 `
 
@@ -124,8 +124,8 @@ const PaginatorGoToPage = styled.input`
   width: 4rem;
 `
 
-const defaultGetColumnChild = function <T>(row: T, { name }: TableColumn) {
-  const value = (row as any)[name] ?? null
+const defaultGetColumnChild = function <T>(row: T, { name }: TableColumn<T>) {
+  const value = row[name] ?? null
 
   return typeof value === "boolean" ? String(value) : value
 }
@@ -141,7 +141,7 @@ const TableRenderer = function <T>({
   fetchEndpoint: string
   getColumnChild: (
     row: T,
-    column: TableColumn,
+    column: TableColumn<T>,
     index: number,
   ) => React.ReactNode
   token?: {
@@ -150,17 +150,17 @@ const TableRenderer = function <T>({
   }
   classNames?: Record<"TableRendererContainer", string>
 }) {
-  type ThisTableState = TableState<T[]>
+  type ThisTableState = TableState<T>
   tableInitializeMessage ??= "Initialize"
 
   const { initialState, abortController } = React.useMemo(function () {
     const queryParams = new URLSearchParams(window.location.search)
-    const queryState = queryParams.get("state")
+    const queryState = queryParams.get(tableRendererStateURLParam)
     const baseInitialState = getInitialTableState()
     const initialState = queryState
       ? {
           ...baseInitialState,
-          ...JSON.parse(queryState),
+          ...JSON.parse(decodeURIComponent(queryState)),
           isInitialized: false,
           error: undefined,
           isLoading: false,
@@ -171,11 +171,12 @@ const TableRenderer = function <T>({
   }, [])
 
   const [state, setState] = React.useState<ThisTableState>(initialState)
-  const [scrollerRef, setScrollerRef] = React.useState<HTMLDivElement | null>(
-    null,
-  )
-  const [tableRef, setTableRef] = React.useState<HTMLTableElement | null>(null)
-  const errorRef = React.useRef<HTMLDivElement | null>(null)
+  const [scrollerElement, setScrollerElement] =
+    React.useState<HTMLDivElement | null>(null)
+  const [dataTableElement, setDataTableElement] =
+    React.useState<HTMLTableElement | null>(null)
+  const errorElement = React.useRef<HTMLDivElement | null>(null)
+  const tokenInput = React.useRef<HTMLInputElement | null>(null)
 
   const load = React.useMemo(
     function () {
@@ -198,7 +199,7 @@ const TableRenderer = function <T>({
             document.title,
             `${window.location.href.slice(
               ...[0, ...(replaceQueryStart === -1 ? [] : [replaceQueryStart])],
-            )}${queryParams.toString()}`,
+            )}?${queryParams.toString()}`,
           )
         }
         setState(newState)
@@ -232,7 +233,10 @@ const TableRenderer = function <T>({
               "content-type": "application/json",
               accept: isExportRequest ? "application/csv" : "application/json",
             },
-            body: JSON.stringify(request),
+            body: JSON.stringify({
+              ...request,
+              page: state.wereFiltersApplied ? request.page : 1,
+            }),
           })
 
           const responseText = await response.text()
@@ -258,9 +262,9 @@ const TableRenderer = function <T>({
                 wereFiltersApplied: true,
                 isInitialized: true,
                 error: undefined,
-                ...(tableRef === null
+                ...(dataTableElement === null
                   ? {}
-                  : { scrollTo: { top: tableRef.offsetTop } }),
+                  : { scrollTo: { top: dataTableElement.offsetTop } }),
               })
             }
           } else {
@@ -274,9 +278,9 @@ const TableRenderer = function <T>({
                     : JSON.stringify(errorDescription),
                 isLoading: false,
                 wereFiltersApplied: false,
-                ...(errorRef.current === null
+                ...(errorElement.current === null
                   ? {}
-                  : { scrollTo: { top: errorRef.current.offsetTop } }),
+                  : { scrollTo: { top: errorElement.current.offsetTop } }),
               })
             } catch (error) {
               throw new Error(
@@ -287,9 +291,9 @@ const TableRenderer = function <T>({
         } catch (error: any) {
           const updates: Partial<ThisTableState> = {
             wereFiltersApplied: false,
-            ...(errorRef.current === null
+            ...(errorElement.current === null
               ? {}
-              : { scrollTo: { top: errorRef.current.offsetTop } }),
+              : { scrollTo: { top: errorElement.current.offsetTop } }),
           }
 
           if (state.loadCount === loadCount) {
@@ -305,7 +309,7 @@ const TableRenderer = function <T>({
         }
       }
     },
-    [state, tableRef, errorRef],
+    [state, dataTableElement, errorElement],
   )
 
   const {
@@ -438,7 +442,7 @@ const TableRenderer = function <T>({
       const ErrorDisplay = function () {
         return (
           <ErrorMessage
-            ref={errorRef}
+            ref={errorElement}
             error={state.error}
             dismiss={function () {
               setState({ ...state, error: undefined })
@@ -466,25 +470,23 @@ const TableRenderer = function <T>({
     [state, load, setState],
   )
 
-  const tokenInput = React.useRef<HTMLInputElement | null>(null)
-
   React.useLayoutEffect(
     function () {
-      if (scrollerRef === null || tableRef === null) {
+      if (scrollerElement === null || dataTableElement === null) {
         return
       }
 
-      const targetScrollerWidth = `${tableRef.scrollWidth}px`
-      if (scrollerRef.style.width !== targetScrollerWidth) {
-        scrollerRef.style.width = targetScrollerWidth
+      const targetScrollerWidth = `${dataTableElement.scrollWidth}px`
+      if (scrollerElement.style.width !== targetScrollerWidth) {
+        scrollerElement.style.width = targetScrollerWidth
       }
 
-      const scrollerParent = scrollerRef.parentElement
+      const scrollerParent = scrollerElement.parentElement
       if (scrollerParent === null) {
         return
       }
 
-      const tableParent = tableRef.parentElement
+      const tableParent = dataTableElement.parentElement
       if (tableParent === null) {
         return
       }
@@ -516,7 +518,7 @@ const TableRenderer = function <T>({
       tableParent.removeEventListener("scroll", tableParentScrollCallback)
       tableParent.addEventListener("scroll", tableParentScrollCallback)
     },
-    [tableRef, scrollerRef],
+    [dataTableElement, scrollerElement],
   )
 
   React.useLayoutEffect(
@@ -659,7 +661,7 @@ const TableRenderer = function <T>({
 
       <ErrorDisplay />
 
-      <div>
+      <Section>
         <button
           {...(state.wereFiltersApplied && !state.isLoading
             ? {
@@ -679,18 +681,18 @@ const TableRenderer = function <T>({
         {state.wereFiltersApplied ? null : (
           <em>Note: Filters should be applied before exporting</em>
         )}
-      </div>
+      </Section>
 
       <Paginator goToPagePlacement="top" />
 
-      <DataSection>
+      <Section>
         {state.data?.length ? (
           <TableContainer>
-            <Scroller ref={setScrollerRef} />
+            <Scroller ref={setScrollerElement} />
           </TableContainer>
         ) : null}
         <TableContainer>
-          <DataTable ref={setTableRef}>
+          <DataTable ref={setDataTableElement}>
             <thead>
               <tr>
                 {state.columns.map(function ({ name, isSortable }, key) {
@@ -736,7 +738,7 @@ const TableRenderer = function <T>({
                                   nextDirection === null
                                     ? null
                                     : {
-                                        column: name,
+                                        column: name as any,
                                         direction: nextDirection,
                                         sortedByDefault,
                                       },
@@ -788,7 +790,7 @@ const TableRenderer = function <T>({
             </tbody>
           </DataTable>
         </TableContainer>
-      </DataSection>
+      </Section>
 
       <Paginator goToPagePlacement="bottom" />
     </>

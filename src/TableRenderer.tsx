@@ -254,9 +254,12 @@ const TableRenderer = function <T>({
           const responseText = await response.text()
           if (response.ok) {
             if (isExportRequest) {
-              const blob = new Blob(responseText.split("\n"), {
-                type: exportEncoding,
-              })
+              const blob = new Blob(
+                responseText.split("\n").map(function (text) {
+                  return `${text}\n`
+                }),
+                { type: exportEncoding },
+              )
               saveAs(
                 blob,
                 `${new Date().toISOString().replace(/\./g, "_")}${

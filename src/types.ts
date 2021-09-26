@@ -1,3 +1,5 @@
+import React from "react"
+
 export type TableFilterValue =
   | {
       tag: "ISO8601 date"

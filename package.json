@@ -1,18 +1,7 @@
 {
-  "scripts": {
-    "typecheck": "tsc --noEmit",
-    "prettier": "prettier --loglevel silent '{*,**/*}.json'",
-    "eslint": "eslint '{*,**/*}.{ts,tsx}'",
-    "lint:eslint": "npm run eslint",
-    "lint:prettier": "npm run prettier -- --check",
-    "lint": "npm run lint:eslint && npm run lint:prettier",
-    "fix:eslint": "npm run eslint -- --fix",
-    "fix:prettier": "npm run prettier -- --write",
-    "fix": "npm run fix:eslint && npm run fix:prettier"
-  },
-  "name": "table-renderer",
+  "name": "@parity/table-renderer",
   "description": "table-renderer",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Parity <admin@parity.io> (https://parity.io)",
   "license": "Apache-2.0",
   "licenses": [
@@ -20,6 +9,13 @@
       "type": "Apache-2.0",
       "url": "http://opensource.org/licenses/Apache-2.0"
     }
+  ],
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "LICENSE",
+    "package.json",
+    "README.md"
   ],
   "devDependencies": {
     "@types/file-saver": "^2.0.3",
@@ -42,5 +38,18 @@
     "@linaria/react": "^3.0.0-beta.13",
     "file-saver": "^2.0.5",
     "react": "^17.0.2"
+  },
+  "scripts": {
+    "prepack": "npm run build",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "prettier": "prettier --loglevel silent '{*,**/*}.json'",
+    "eslint": "eslint '{*,**/*}.{ts,tsx}'",
+    "lint:eslint": "npm run eslint",
+    "lint:prettier": "npm run prettier -- --check",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "fix:eslint": "npm run eslint -- --fix",
+    "fix:prettier": "npm run prettier -- --write",
+    "fix": "npm run fix:eslint && npm run fix:prettier"
   }
 }
